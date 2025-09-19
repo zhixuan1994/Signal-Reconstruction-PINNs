@@ -192,3 +192,4 @@ class sliding_windows():
             else:
                 sing_out_temp.append(np.median(temp_wind))
         return np.array(sing_out_temp)
+
