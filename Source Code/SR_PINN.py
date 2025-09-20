@@ -36,7 +36,7 @@ class TVAR_PINN():
     def TV_AR_lagged_main(self, series):
         if np.sum(np.isnan(series)) == 0:
             y_out, y_target = self.TV_AR_lagged_one(series.reshape(-1,1))
-            return y_out, y_target, np.arange(self.lags_r, len(series),1).reshape(-1,1) + self.lags_r
+            return y_out, y_target, np.arange(self.lags_r, len(series),1).reshape(-1,1)
         series_segments, time_index = [], []
         start = 0
         series_ind = np.where(~np.isnan(series))[0]
@@ -103,7 +103,7 @@ class sliding_windows():
     def TV_AR_lagged_main(self, series):
         if np.sum(np.isnan(series)) == 0:
             y_out, y_target = self.TV_AR_lagged_one(series.reshape(-1,1))
-            return y_out, y_target, np.arange(self.lags_r, len(series),1).reshape(-1,1) + self.lags_r
+            return y_out, y_target, np.arange(self.lags_r, len(series),1).reshape(-1,1)
         series_segments, time_index = [], []
         start = 0
         series_ind = np.where(~np.isnan(series))[0]
@@ -157,24 +157,7 @@ class sliding_windows():
             sig_dict = self.windows_one_pred(model, temp_windows[0], temp_windows[2].reshape(-1,)+i, sig_dict, pred_step)
         return sig_dict
     
-    def predict_step(self, signal_missing):
-        max_p = 0
-        max_seg = []
-        for i in signal_missing:
-            if i == True:
-                max_seg.append(1)
-            else:
-                temp = len(max_seg)
-                max_seg = []
-                if temp > max_p:
-                    max_p = temp
-        temp = len(max_seg)
-        if temp > max_p:
-            max_p = temp
-        return max_p
-    
     def main(self):
-        p = self.predict_step(np.isnan(self.obs_signal)) 
         signal_init = pd.Series(self.obs_signal).interpolate().to_numpy()
         p = 1
         d = self.reconstruction_main(self.model, signal_init, p, self.lags_r, self.win_leng)
@@ -186,10 +169,9 @@ class sliding_windows():
             temp = np.array(d[i])
             temp = temp[~np.isnan(temp)]
             sigma = np.sqrt(np.var(temp))
-            temp_wind = temp[temp<sigma*self.sigma_w]
+            temp_wind = temp[np.abs(temp)<sigma*self.sigma_w]
             if len(temp_wind) == 0:
                 sing_out_temp.append(np.median(temp))
             else:
                 sing_out_temp.append(np.median(temp_wind))
         return np.array(sing_out_temp)
-
